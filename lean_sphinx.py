@@ -1,7 +1,7 @@
 from docutils import nodes
 from docutils.parsers.rst import Directive
 from sphinx.builders import Builder
-from sphinx.directives import CodeBlock
+from sphinx.directives.code import CodeBlock
 from sphinx.errors import SphinxError
 import os, os.path, fnmatch, subprocess
 import codecs
@@ -15,15 +15,16 @@ except:
     def urlquote(s, safe='/'):
         return urllib.quote(s.encode('utf-8'), safe)
 
+# TODO: Reintroduce the "try it" button once there exists a Lean 4 web editor.
 
 # "Try it!" button
 
 class lean_code_goodies(nodes.General, nodes.Element): pass
 
-def mk_try_it_uri(code):
-    uri = 'https://leanprover-community.github.io/lean-web-editor/#code='
-    uri += urlquote(code, safe='~()*!.\'')
-    return uri
+# def mk_try_it_uri(code):
+#     uri = 'https://leanprover-community.github.io/lean-web-editor/#code='
+#     uri += urlquote(code, safe='~()*!.\'')
+#     return uri
 
 def process_lean_nodes(app, doctree, fromdocname):
     env = app.builder.env
@@ -45,13 +46,15 @@ def process_lean_nodes(app, doctree, fromdocname):
             new_node.replace_self([node])
 
 def html_visit_lean_code_goodies(self, node):
-    self.body.append(self.starttag(node, 'div', style='position: relative'))
-    self.body.append("<div style='position: absolute; right: 0; top: 0; padding: 1ex'>")
-    self.body.append(self.starttag(node, 'a', target='_blank', href=mk_try_it_uri(node['full_code'])))
-    self.body.append('try it!</a></div>')
+   pass
+   # self.body.append(self.starttag(node, 'div', style='position: relative'))
+   # self.body.append("<div style='position: absolute; right: 0; top: 0; padding: 1ex'>")
+   # self.body.append(self.starttag(node, 'a', target='_blank', href=mk_try_it_uri(node['full_code'])))
+   # self.body.append('try it!</a></div>')
 
 def html_depart_lean_code_goodies(self, node):
-    self.body.append('</div>')
+    pass
+    # self.body.append('</div>')
 
 def latex_visit_lean_code_goodies(self, node):
     pass
@@ -80,13 +83,20 @@ class LeanTestBuilder(Builder):
             out.write(node['full_code'])
 
     def finish(self):
+        leantest_dot_lean = open(self.outdir + "/../Leantest.lean", "w")
+
         for root, _, filenames in os.walk(self.outdir):
             for fn in fnmatch.filter(filenames, '*.lean'):
                 fn = os.path.join(root, fn)
                 if fn not in self.written_files:
                     os.remove(fn)
+                else:
+                    f = os.path.basename(os.path.normpath(fn)).removesuffix('.lean')
+                    leantest_dot_lean.write("import Leantest." + f + "\n")
 
-        proc = subprocess.Popen(['lean', '--make', self.outdir], stdout=subprocess.PIPE)
+        leantest_dot_lean.close()
+
+        proc = subprocess.Popen(['lake', 'build'], stdout=subprocess.PIPE)
         stdout, stderr = proc.communicate()
         errors = '\n'.join(l for l in stdout.decode('utf-8').split('\n') if ': error:' in l)
         if errors != '': raise SphinxError('\nlean exited with errors:\n{0}\n'.format(errors))
@@ -102,9 +112,11 @@ class LeanTestBuilder(Builder):
         return self.env.found_docs
 
 def setup(app):
-    app.add_node(lean_code_goodies,
+    app.add_node(
+        lean_code_goodies,
         html=(html_visit_lean_code_goodies, html_depart_lean_code_goodies),
-        latex=(latex_visit_lean_code_goodies, latex_depart_lean_code_goodies))
+        latex=(latex_visit_lean_code_goodies, latex_depart_lean_code_goodies)
+    )
     app.connect('doctree-resolved', process_lean_nodes)
 
     app.add_builder(LeanTestBuilder)

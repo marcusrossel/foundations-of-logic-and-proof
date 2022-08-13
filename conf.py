@@ -63,7 +63,7 @@ release = u'3.18.4'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -88,23 +88,14 @@ numfig = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
 html_theme_options = {
-    'logo_name': True,
-    'font_family': 'Times New Roman, Times, serif',
-    'head_font_family': 'Times New Roman, Times, serif',
-    'code_bg': 'white',
-    'extra_nav_links': {'PDF version':'logic_and_proof.pdf',
-                       'Lean Home':'https://leanprover.github.io/'},
-    # 'sidebar_width' : '200px',
-    # 'page_width' : '960px',
-    # 'fixed_sidebar' : True
-}
+}    
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

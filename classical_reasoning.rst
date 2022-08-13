@@ -34,18 +34,18 @@ Remember that in natural deduction, proof by contradiction is expressed by the f
 
 The assumption :math:`\neg A` is canceled at the final inference.
 
-In Lean, the inference is named ``by_contradiction``, and since it is a classical rule, we have to use the command ``open classical`` before it is available. Once we do so, the pattern of inference is expressed as follows:
+In Lean, the inference is named ``byContradiction``, and since it is a classical rule, we have to use the command ``open Classical`` before it is available. Once we do so, the pattern of inference is expressed as follows:
 
 .. code-block:: lean
 
-    open classical
+    open Classical
 
     variable (A : Prop)
 
     example : A :=
-    by_contradiction
-      (assume h : ¬ A,
-        show false, from sorry)
+      byContradiction
+         (λ h : ¬ A =>
+            show False from sorry)
 
 One of the most important consequences of this rule is a classical principle that we mentioned above, namely, the *law of the excluded middle*, which asserts that the following holds for all :math:`A`: :math:`A \vee \neg A`.  In Lean we denote this law by ``em``.  In mathematical arguments, one often splits a proof into two cases, assuming first :math:`A` and then :math:`\neg A`. Using the elimination rule for disjunction, this is equivalent to using :math:`A \vee \neg A`, which is the excluded middle principle for this particular :math:`A`.
 
@@ -82,39 +82,39 @@ Here is the same proof rendered in Lean:
 
 .. code-block:: lean
 
-    open classical
+    open Classical
 
     variable (A : Prop)
 
     example : A ∨ ¬ A :=
-    by_contradiction
-      (assume h1 : ¬ (A ∨ ¬ A),
-        have h2 : ¬ A, from
-          assume h3 : A,
-          have h4 : A ∨ ¬ A, from or.inl h3,
-          show false, from h1 h4,
-        have h5 : A ∨ ¬ A, from or.inr h2,
-        show false, from h1 h5)
+      byContradiction
+         (λ h1 : ¬ (A ∨ ¬ A) =>
+            have h2 : ¬ A :=
+               λ h3 : A =>
+                  have h4 : A ∨ ¬ A := Or.inl h3
+                  show False from h1 h4
+            have h5 : A ∨ ¬ A := Or.inr h2
+            show False from h1 h5)
 
-The principle is known as the law of the excluded middle because it says that a proposition ``A`` is either true or false; there is no middle ground. As a result, the theorem is named ``em`` in the Lean library. For any proposition ``A``, ``em A`` denotes a proof of ``A ∨ ¬ A``, and you are free to use it any time ``classical`` is open:
+The principle is known as the law of the excluded middle because it says that a proposition ``A`` is either true or false; there is no middle ground. As a result, the theorem is named ``em`` in the Lean library. For any proposition ``A``, ``em A`` denotes a proof of ``A ∨ ¬ A``, and you are free to use it any time ``Classical`` is open:
 
 .. code-block:: lean
 
-    open classical
+    open Classical
 
     example (A : Prop) : A ∨ ¬ A :=
-    or.elim (em A)
-      (assume : A, or.inl this)
-      (assume : ¬ A, or.inr this)
+      Or.elim (em A)
+         (λ _ : A => Or.inl ‹A›)
+         (λ _ : ¬ A => Or.inr ‹¬ A›)
 
 Or even more simply:
 
 .. code-block:: lean
 
-    open classical
+    open Classical
 
     example (A : Prop) : A ∨ ¬ A :=
-    em A
+      em A
 
 In fact, we can go in the other direction, and use the law of the excluded middle to justify proof by contradiction. You are asked to do this in the exercises.
 
@@ -154,16 +154,16 @@ And here is the corresponding proof in Lean:
 
 .. code-block:: lean
 
-    open classical
+    open Classical
 
     example (A : Prop) : ¬ ¬ A ↔ A :=
-    iff.intro
-      (assume h1 : ¬ ¬ A,
-        show A, from by_contradiction
-          (assume h2 : ¬ A,
-            show false, from h1 h2))
-      (assume h1 : A,
-        show ¬ ¬ A, from assume h2 : ¬ A, h2 h1)
+      Iff.intro
+         (λ h1 : ¬ ¬ A =>
+           show A from byContradiction
+             (λ h2 : ¬ A =>
+               show False from h1 h2))
+         (λ h1 : A =>
+           show ¬ ¬ A from λ h2 : ¬ A => h2 h1)
 
 In the next section, we will derive a number of classical rules and equivalences. These are tricky to prove. In general, to use classical reasoning in natural deduction, we need to extend the general heuristic presented in :numref:`forward_and_backward_reasoning` as follows:
 
@@ -236,27 +236,27 @@ Here are the same proofs, rendered in Lean:
 
 .. code-block:: lean
 
-    open classical
+    open Classical
 
-    variables (A B : Prop)
+    variable (A B : Prop)
 
     example (h : ¬ B → ¬ A) : A → B :=
-    assume h1 : A,
-    show B, from
-      by_contradiction
-        (assume h2 : ¬ B,
-          have h3 : ¬ A, from h h2,
-          show false, from h3 h1)
+    λ h1 : A =>
+      show B from
+        byContradiction
+          (λ h2 : ¬ B =>
+            have h3 : ¬ A := h h2
+            show False from h3 h1)
 
     example (h : ¬ (A ∧ ¬ B)) : A → B :=
-    assume : A,
-    show B, from
-      by_contradiction
-        (assume : ¬ B,
-          have A ∧ ¬ B, from and.intro ‹A› this,
-          show false, from h this)
+      λ _ : A =>
+      show B from
+        byContradiction
+          (λ _ : ¬ B =>
+            have : A ∧ ¬ B := And.intro ‹A› ‹¬ B›
+            show False from h this)
 
-Notice that in the second example, we used an anonymous ``assume`` and an anonymous ``have``. We used the brackets ``\f<`` and ``\f>`` to write ``‹A›``, referring back to the first assumption. The first use of the word ``this`` refers back to the assumption ``¬ B``, while the second one refers back to the ``have``.
+Notice that in the second example, we used an anonymous ``λ`` and an anonymous ``have``. We used the brackets ``\f<`` and ``\f>`` to write ``‹A›`` and ``‹¬ B›``, referring back to the assumptions. The use of the word ``this`` refers back to the ``have``.
 
 Knowing that we can prove the law of the excluded middle, it is convenient to use it in classical proofs. Here is an example, with a proof of :math:`(A \to B) \vee (B \to A)`:
 
@@ -294,25 +294,24 @@ Here is the corresponding proof in Lean:
 
 .. code-block:: lean
 
-    open classical
+    open Classical
 
-    variables (A B : Prop)
+    variable (A B : Prop)
 
     example : (A → B) ∨ (B → A) :=
-    or.elim (em B)
-      (assume h : B,
-        have A → B, from
-          assume : A,
-          show B, from h,
-        show (A → B) ∨ (B → A),
-          from or.inl this)
-      (assume h : ¬ B,
-        have B → A, from
-          assume : B,
-          have false, from h this,
-          show A, from false.elim this,
-        show (A → B) ∨ (B → A),
-          from or.inr this)
+      Or.elim (em B)
+        (λ h : B =>
+          have : A → B :=
+            λ _ : A => show B from h
+          show (A → B) ∨ (B → A)
+            from Or.inl this)
+        (λ h : ¬ B =>
+          have : B → A :=
+            λ _ : B =>
+              have : False := h ‹B›
+              show A from False.elim this
+          show (A → B) ∨ (B → A)
+            from Or.inr this)
 
 Using classical reasoning, implication can be rewritten in terms of disjunction and negation:
 
@@ -377,37 +376,37 @@ Exercises
 
    .. code-block:: lean
 
-       open classical
-       variables {A B C : Prop}
+       open Classical
+       variable {A B C : Prop}
 
        -- Prove ¬ (A ∧ B) → ¬ A ∨ ¬ B by replacing the sorry's below
        -- by proofs.
 
-       lemma step1 (h₁ : ¬ (A ∧ B)) (h₂ : A) : ¬ A ∨ ¬ B :=
-       have ¬ B, from sorry,
-       show ¬ A ∨ ¬ B, from or.inr this
+       theorem step1 (h₁ : ¬ (A ∧ B)) (h₂ : A) : ¬ A ∨ ¬ B :=
+        have : ¬ B := sorry
+        show ¬ A ∨ ¬ B from Or.inr this
 
-       lemma step2 (h₁ : ¬ (A ∧ B)) (h₂ : ¬ (¬ A ∨ ¬ B)) : false :=
-       have ¬ A, from
-         assume : A,
-         have ¬ A ∨ ¬ B, from step1 h₁ ‹A›,
-         show false, from h₂ this,
-       show false, from sorry
+       theorem step2 (h₁ : ¬ (A ∧ B)) (h₂ : ¬ (¬ A ∨ ¬ B)) : False :=
+        have : ¬ A :=
+          λ _ : A =>
+            have : ¬ A ∨ ¬ B := step1 h₁ ‹A›
+            show False from h₂ this
+        show False from sorry
 
        theorem step3 (h : ¬ (A ∧ B)) : ¬ A ∨ ¬ B :=
-       by_contradiction
-         (assume h' : ¬ (¬ A ∨ ¬ B),
-           show false, from step2 h h')
+        byContradiction
+          (λ h' : ¬ (¬ A ∨ ¬ B) =>
+            show False from step2 h h')
 
 #. Also do these:
 
    .. code-block:: lean
 
-       open classical
-       variables {A B C : Prop}
+       open Classical
+       variable {A B C : Prop}
 
        example (h : ¬ B → ¬ A) : A → B :=
-       sorry
+         sorry
 
        example (h : A → B) : ¬ A ∨ B :=
-       sorry
+         sorry

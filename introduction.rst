@@ -87,6 +87,9 @@ If you consider the examples of proofs in the last section, you will notice that
 
 To that end, we will introduce symbols for key logical notions, including the following:
 
+..
+  TODO: text looks weird
+
 -  :math:`A \to B`, ":math:`\mbox{if $A$ then $B$}`"
 -  :math:`A \wedge B`, ":math:`\mbox{$A$ and $B$}`"
 -  :math:`A \vee B`, ":math:`\mbox{$A$ or $B$}`"
@@ -161,17 +164,23 @@ Since the end of the twentieth century, however, the advent of computational pro
 .. code-block:: lean
 
     section
-    variables (P Q : Prop)
+    variable (P Q : Prop)
 
-    theorem my_theorem : P ∧ Q → Q ∧ P :=
-    assume h : P ∧ Q,
-    have P, from and.left h,
-    have Q, from and.right h,
-    show Q ∧ P, from and.intro ‹Q› ‹P›
+    theorem my_theorem : P ∧ Q → Q ∧ P := by
+      intro h
+      have hp := And.left h
+      have hq := And.right h
+      exact And.intro hq hp
 
     end
 
+..
+  TODO: Remove this reference to the try it button.
+
 If you are reading the present text in online form, you will find a button above the formal "proof script" that says "try it!" Pressing the button opens the proof in an editor window and runs a version of Lean inside your browser to process the proof, turn it into an axiomatic derivation, and verify its correctness. You can experiment by varying the text in the editor; any errors will be noted in the window to the right.
+
+..
+  TODO: Should this remain?
 
 Proofs in Lean can access a library of prior mathematical results, all verified down to axiomatic foundations. A goal of the field of interactive theorem proving is to reach the point where any contemporary theorem can be verified in this way. For example, here is a formal proof that the square root of two is irrational, following the model of the informal proof presented above:
 
@@ -240,6 +249,6 @@ This book also aims to show you how mathematics is built up from fundamental con
 About this Textbook
 -------------------
 
-Both this online textbook and the *Lean* theorem prover are new and ongoing projects. You can learn more about Lean from its `project page <http://leanprover.github.io/>`_, the Leann `community pages <http://leanprover-community.github.io/>`_, and the online textbook, `Theorem Proving in Lean <http://leanprover.github.io/theorem_proving_in_lean/>`_.
+Both this online textbook and the *Lean* theorem prover are new and ongoing projects. You can learn more about Lean from its `project page <http://leanprover.github.io/>`_, the Lean `community pages <http://leanprover-community.github.io/>`_, and the online textbook, `Theorem Proving in Lean 4 <http://leanprover.github.io/theorem_proving_in_lean4/>`_.
 
 We are grateful for feedback and corrections from a number of people, including Bruno Cuconato, William DeMeo, Tobias Grosser, Lyle Kopnicky, Alexandre Rademaker, Matt Rice, and Jason Siefken.
